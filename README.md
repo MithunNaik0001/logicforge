@@ -1,162 +1,162 @@
-# Chihuahua vs Muffin – 3LC Kaggle Starter Kit
+# Logic Forge – Hackathon Report
 
-**The 3LC x Hack4Impact-UMD AI Hackathon: Data-Centric AI with 3LC**
+**Date:** 14 March 2026
 
-> Can you tell a chihuahua from a muffin? Build an image classifier using data-centric AI with 3LC and compete on the Kaggle leaderboard.
+## Project Title
 
-**Setup and workflow:** See the competition **Overview**, **Description**, and **Iterative Workflow** tabs on Kaggle for the full guide. You must also complete the **evaluation & feedback form** by the deadline (see Overview on Kaggle).
+**Chihuahua vs Muffin Classification Using 3LC AI Platform**
 
 ---
 
-## Quick start
+# 👥 Team Members
 
-### 1. Environment
+* **Karthik Shetty** – Team Lead
+* **Anish A**
+* **Mithun R Naik**
+* **Prajwal P S**
+
+---
+
+# 🎯 Objective
+
+To build a robust **image classification model** that can distinguish between **Chihuahua and Muffin images** using the **3LC AI Platform**, while improving **validation accuracy** by cleaning and relabeling the dataset.
+
+---
+
+# 🛠 Tools & Environment
+
+* **Python:** 3.9
+* **Environment:** `3lc-env` virtual environment
+* **Platform:** 3LC AI Platform (Dashboard & Service)
+* **Framework:** PyTorch
+* **Hardware:** CPU / GPU (if available)
+* **Dataset:** Chihuahua vs Muffin (Train + Validation images)
+
+---
+
+# 🚀 Step 1: Set Up 3LC Environment
+
+### 1. Create 3LC Account
+
+Obtain API Key from 3LC platform.
+
+### 2. Activate Virtual Environment
 
 ```bash
-python -m venv 3lc-env
-# Windows: 3lc-env\Scripts\activate
-# Mac/Linux: source 3lc-env/bin/activate
-
-# CPU: install 3LC and PyTorch. For GPU: install PyTorch with CUDA first, then 3LC (see Kaggle "Iterative Workflow - Environment Setup").
-pip install 3lc joblib pytz umap-learn torch torchvision
+3lc-env\Scripts\activate
 ```
 
-The starter uses **UMAP** for embedding reduction (3D embeddings in the Dashboard). This works on both CPU and GPU and avoids environment-specific issues that PaCMAP can have (e.g. on some Windows/PyTorch setups). 3LC also supports PaCMAP if you want to switch `method="pacmap"` in `train.py` and install `pacmap`.
-
-### 2. 3LC login
-
-- Create account: [https://account.3lc.ai](https://account.3lc.ai)
-- API key: [https://account.3lc.ai/api-key](https://account.3lc.ai/api-key)
+### 3. Login to 3LC
 
 ```bash
-3lc login <your_api_key>
-3lc service   # Required to use the 3LC Dashboard (label undefined, view embeddings)
+3lc login <API_KEY>
 ```
 
-### 3. Data
-
-The kit includes a pre-split `data/` folder:
-
-```
-data/
-├── train/
-│   ├── chihuahua/   (labeled)
-│   ├── muffin/     (labeled)
-│   └── undefined/  (unlabeled — use 3LC to label and add to training)
-├── val/
-│   ├── chihuahua/
-│   └── muffin/
-└── test/           (flat — only images, no subfolders; for submission)
-```
-
-**No test data is used during training.** Only `train` and `val` are registered in 3LC; `predict.py` reads `data/test/` only for inference.
-
-### 4. Run order (train and submit)
+### 4. Start 3LC Service
 
 ```bash
-python register_tables.py   # once — create 3LC tables from data/train, data/val
-python train.py             # train model; writes best_model.pth
-python predict.py           # run inference; writes submission.csv
+3lc service
 ```
 
-Upload `submission.csv` to the Kaggle competition.
+### 5. Open Dashboard
+
+```
+https://dashboard.3lc.ai
+```
 
 ---
 
-## Competition at a glance
+# 📂 Step 2: Start a New Project
 
-| Item | Details |
-|------|--------|
-| **Task** | Binary classification: chihuahua (0) vs muffin (1) |
-| **Model** | ResNet-18 (fixed); no pretrained weights — train from scratch |
-| **Metric** | Accuracy on hidden test set |
-| **Tool** | 3LC (required) |
+Create a new project inside the dashboard.
 
----
+**Project Name**
 
-## Data-centric loop
+```
+Chihuahua-Muffin-Fresh
+```
 
-1. **Train** – `train.py` → 3LC run with embeddings.
-2. **Analyze** – Dashboard: embeddings, per-sample metrics.
-3. **Fix data** – Label `undefined`, correct labels, adjust weights.
-4. **Retrain** – `train.py` uses `.latest()` tables.
-5. **Submit** – `predict.py` → `submission.csv` → Kaggle.
+Creating a new project helps maintain a **clean workspace without messy or old tables**.
 
 ---
 
-## Data at a glance (no ambiguity)
+# 🤖 Step 3: Initial Training
 
-| Set | Labeled | Unlabeled | Total |
-|-----|---------|-----------|-------|
-| **Train** | 100 (50 chihuahua, 50 muffin) | 3,579 undefined | 3,679 |
-| **Val** | 1,000 (500 per class, balanced) | 0 | 1,000 |
-| **Test** | Hidden | — | 1,184 |
+Run the training script:
 
-You start with **100 labeled** and **3,579 unlabeled**. Val is 1,000 (500 per class) for stable feedback. Use 3LC to label undefined samples and retrain to improve accuracy.
+```bash
+python train.py
+```
 
-## Outputs (what each script produces)
+### Initial Results
 
-| Script | Output | Behavior when run again |
-|--------|--------|--------------------------|
-| `register_tables.py` | 3LC tables (train, val) | **Idempotent:** if tables already exist, skips and does not overwrite; safe to run multiple times |
-| `train.py` | `best_model.pth` | **Overwrites** previous best model |
-| `predict.py` | `submission.csv` | **Overwrites** previous submission file |
-
-So: each training run replaces `best_model.pth`; each prediction run replaces `submission.csv`. There is no versioning; the latest run is the one that counts. For a different checkpoint, rename or copy `best_model.pth` before running `train.py` again.
+* **Model:** ResNet-18 (random initialization)
+* **Validation Accuracy:** ~76%
+* **Note:** Pretrained weights were not used due to competition rules.
 
 ---
 
-## Loading tables: .latest() vs URL
+# 🔍 Step 4: Inspect & Relabel "Undefined" Images
 
-- **Default:** `train.py` loads tables by **name** with **`.latest()`**, so it always uses the newest revision (including any edits you make in the 3LC Dashboard).
-- **Optional:** To train on a **specific** table revision, you can load by URL. In `train.py`, comment out the "OPTION 1" block and uncomment the "OPTION 2" block, then paste your train and val table URLs (from the 3LC Dashboard → Tables tab → copy URL).
+1. Open **Train Table → 3D Embeddings View** in the Dashboard.
+2. Identify clusters labeled **undefined**.
+3. Bulk relabel images where classification is obvious:
 
----
+   * Chihuahua
+   * Muffin
+4. Leave **ambiguous images** as `undefined`.
 
-## Files in this kit
-
-| File | Purpose |
-|------|--------|
-| `config.yaml` | Competition and training config |
-| `register_tables.py` | Register train/val in 3LC (run once) |
-| `train.py` | Training with 3LC; saves `best_model.pth` |
-| `predict.py` | Inference on test; writes `submission.csv` |
-| `sample_submission.csv` | Required submission format and image_ids |
-| `data/` | Pre-split train, val, and test images |
-| `README.md` | This file |
+⚠️ This step significantly improves model accuracy.
 
 ---
 
-## Submission format
+# 🔁 Step 5: Retraining After Relabeling
 
-`submission.csv` must have:
+Run the training script again:
 
-- `image_id` – same IDs as in `sample_submission.csv`
-- `prediction` – 0 (chihuahua) or 1 (muffin)
-- `confidence` – float in [0, 1]
+```bash
+python train.py
+```
 
----
+Results:
 
-## Dataset and pipeline verification
-
-- **Splits:** Only `data/train` and `data/val` are registered in 3LC. **Test data is never used for training.** `predict.py` reads only `data/test/` for inference.
-- **Train/val:** Train has labeled (chihuahua, muffin) and undefined (weight=0 until you label in Dashboard). Val has only labeled classes. Class distributions can be checked in the 3LC Dashboard after running `register_tables.py`.
-- **Reproducibility:** `train.py` sets a fixed random seed (see `RANDOM_SEED` in the script) so training is deterministic for the same data and code.
-- **Submission alignment:** If `sample_submission.csv` is present, `predict.py` writes a submission with the same `image_id`s in the same order; missing test images get a default prediction so the file is valid for Kaggle.
+* Updated tables reflected **cleaned and relabeled data**.
+* **Validation accuracy improved** after dataset cleaning.
 
 ---
 
-## For reviewers and live demo
+# ⚠️ Step 6: Challenges & Solutions
 
-- **Run order:** `register_tables.py` (once) → `train.py` → `predict.py`. No silent dependencies on uncommitted or external state.
-- **Failures are explicit:** Missing model, missing test dir, empty test folder, or invalid model file all print a clear error and exit with non-zero status.
-- **Overwrite behavior:** Each run of `train.py` overwrites `best_model.pth`; each run of `predict.py` overwrites `submission.csv`. No versioning; documented in README and in script docstrings.
-- **Table loading:** Participants see which tables are used: `train.py` prints train and val table URLs after loading. Optional URL-based loading is available (commented out) for pinning to a specific revision.
+| Challenge                                 | Solution                                                       |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| Old tables messy and unclickable          | Created a **new project** instead of deleting old tables       |
+| Many undefined images confusing the model | Used **3D embeddings clustering** to relabel confident samples |
+| Limited time for dataset cleaning         | Focused only on **high-confidence relabeling**                 |
 
 ---
 
-## Resources
+# 💡 Step 7: Key Learnings
 
-- [3LC Documentation](https://docs.3lc.ai)
+* Always train in a **new project** for a clean workspace.
+* Use **3D Embeddings View** to identify clusters for bulk relabeling.
+* Only relabel **high-confidence images**.
+* Leave ambiguous images as **undefined**.
+* Avoid rerunning training multiple times without cleaning tables.
 
-Good luck, and may the best data win.
+---
+
+# 🏆 Step 8: Outcome
+
+* Built a **clean dataset workflow using 3LC**.
+* Improved **validation accuracy through dataset relabeling**.
+* Learned **efficient bulk relabeling using 3LC Dashboard**.
+* Gained experience with **AI model debugging in competitions**.
+
+---
+
+# 📌 Summary
+
+This project demonstrates how **dataset cleaning and relabeling can significantly improve model performance**, even when using simple architectures like **ResNet-18**.
+Using **3LC's visualization tools**, we efficiently identified mislabeled data and improved model accuracy within a limited hackathon timeframe.
+
+---
